@@ -17,7 +17,7 @@ use tonic::codegen::http::HeaderMap;
 mod shutdown;
 
 use anyhow::{anyhow, Context, Result};
-use hf_hub::api::tokio::ApiBuilder;
+use hf_hub::api::sync::ApiBuilder;
 use hf_hub::{Repo, RepoType};
 use serde::Deserialize;
 use serde::Serialize;
@@ -71,8 +71,8 @@ pub async fn run(
         // Using a local model
         (model_id_path.to_path_buf(), None)
     } else {
-        let mut builder = ApiBuilder::from_env()
-            .with_progress(false)
+        let mut builder = ApiBuilder::new()
+            .with_progress(true)
             .with_token(hf_token);
 
         if let Some(cache_dir) = huggingface_hub_cache {

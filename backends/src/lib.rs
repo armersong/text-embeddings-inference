@@ -1,6 +1,6 @@
 mod dtype;
 
-use hf_hub::api::tokio::{ApiError, ApiRepo};
+use hf_hub::api::sync::{ApiError, ApiRepo};
 use rand::Rng;
 use std::cmp::{max, min};
 use std::env;
@@ -370,7 +370,6 @@ async fn init_backend(
                 tracing::info!("Downloading `pytorch_model.bin`");
                 api_repo
                     .get("pytorch_model.bin")
-                    .await
                     .map_err(|err| BackendError::WeightsNotFound(err.to_string()))?;
             }
 
@@ -491,7 +490,7 @@ enum BackendCommand {
 async fn download_safetensors(api: &ApiRepo) -> Result<Vec<PathBuf>, ApiError> {
     // Single file
     tracing::info!("Downloading `model.safetensors`");
-    match api.get("model.safetensors").await {
+    match api.get("model.safetensors") {
         Ok(p) => return Ok(vec![p]),
         Err(err) => tracing::warn!("Could not download `model.safetensors`: {}", err),
     };
@@ -499,7 +498,7 @@ async fn download_safetensors(api: &ApiRepo) -> Result<Vec<PathBuf>, ApiError> {
     // Sharded weights
     // Download and parse index file
     tracing::info!("Downloading `model.safetensors.index.json`");
-    let index_file = api.get("model.safetensors.index.json").await?;
+    let index_file = api.get("model.safetensors.index.json")?;
     let index_file_string: String =
         std::fs::read_to_string(index_file).expect("model.safetensors.index.json is corrupted");
     let json: serde_json::Value = serde_json::from_str(&index_file_string)
@@ -521,7 +520,7 @@ async fn download_safetensors(api: &ApiRepo) -> Result<Vec<PathBuf>, ApiError> {
     let mut safetensors_files = Vec::new();
     for n in safetensors_filenames {
         tracing::info!("Downloading `{}`", n);
-        safetensors_files.push(api.get(&n).await?);
+        safetensors_files.push(api.get(&n)?);
     }
 
     Ok(safetensors_files)
@@ -532,13 +531,13 @@ async fn download_onnx(api: &ApiRepo) -> Result<Vec<PathBuf>, ApiError> {
     let mut model_files: Vec<PathBuf> = Vec::new();
 
     tracing::info!("Downloading `model.onnx`");
-    match api.get("model.onnx").await {
+    match api.get("model.onnx") {
         Ok(p) => model_files.push(p),
         Err(err) => {
             tracing::warn!("Could not download `model.onnx`: {err}");
             tracing::info!("Downloading `onnx/model.onnx`");
 
-            match api.get("onnx/model.onnx").await {
+            match api.get("onnx/model.onnx") {
                 Ok(p) => model_files.push(p.parent().unwrap().to_path_buf()),
                 Err(err) => tracing::warn!("Could not download `onnx/model.onnx`: {err}"),
             };
@@ -546,13 +545,13 @@ async fn download_onnx(api: &ApiRepo) -> Result<Vec<PathBuf>, ApiError> {
     };
 
     tracing::info!("Downloading `model.onnx_data`");
-    match api.get("model.onnx_data").await {
+    match api.get("model.onnx_data") {
         Ok(p) => model_files.push(p),
         Err(err) => {
             tracing::warn!("Could not download `model.onnx_data`: {err}");
             tracing::info!("Downloading `onnx/model.onnx_data`");
 
-            match api.get("onnx/model.onnx_data").await {
+            match api.get("onnx/model.onnx_data") {
                 Ok(p) => model_files.push(p.parent().unwrap().to_path_buf()),
                 Err(err) => tracing::warn!("Could not download `onnx/model.onnx_data`: {err}"),
             }

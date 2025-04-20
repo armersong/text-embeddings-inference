@@ -21,7 +21,7 @@ text-embeddings-core = { path = "../core" }
 clap = { workspace = true }
 futures = "^0.3"
 init-tracing-opentelemetry = { version = "0.18.1", features = ["opentelemetry-otlp"] }
-hf-hub = { workspace = true }
+hf-hub = { workspace = true, features = ["ureq"]}
 http = "1.0.0"
 num_cpus = { workspace = true }
 metrics = { workspace = true }
@@ -88,6 +88,7 @@ accelerate = ["text-embeddings-backend/accelerate"]
 python = ["text-embeddings-backend/python"]
 ort = ["text-embeddings-backend/ort"]
 candle = ["text-embeddings-backend/candle"]
+candle-cuda1 = ["text-embeddings-backend/cuda"]
 candle-cuda = ["candle", "text-embeddings-backend/flash-attn", "dep:cudarc"]
 candle-cuda-turing = ["candle", "text-embeddings-backend/flash-attn-v1", "dep:cudarc"]
 candle-cuda-volta = ["candle", "text-embeddings-backend/cuda", "dep:cudarc"]

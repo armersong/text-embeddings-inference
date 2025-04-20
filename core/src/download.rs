@@ -1,4 +1,4 @@
-use hf_hub::api::tokio::{ApiError, ApiRepo};
+use hf_hub::api::sync::{ApiError, ApiRepo};
 use std::path::PathBuf;
 use tracing::instrument;
 
@@ -38,10 +38,10 @@ pub async fn download_artifacts(api: &ApiRepo, pool_config: bool) -> Result<Path
     });
 
     tracing::info!("Downloading `config.json`");
-    api.get("config.json").await?;
+    api.get("config.json")?;
 
     tracing::info!("Downloading `tokenizer.json`");
-    let tokenizer_path = api.get("tokenizer.json").await?;
+    let tokenizer_path = api.get("tokenizer.json")?;
 
     let model_root = tokenizer_path.parent().unwrap().to_path_buf();
     tracing::info!("Model artifacts downloaded in {:?}", start.elapsed());
@@ -51,20 +51,20 @@ pub async fn download_artifacts(api: &ApiRepo, pool_config: bool) -> Result<Path
 #[instrument(skip_all)]
 pub async fn download_pool_config(api: &ApiRepo) -> Result<PathBuf, ApiError> {
     tracing::info!("Downloading `1_Pooling/config.json`");
-    let pool_config_path = api.get("1_Pooling/config.json").await?;
+    let pool_config_path = api.get("1_Pooling/config.json")?;
     Ok(pool_config_path)
 }
 
 #[instrument(skip_all)]
 pub async fn download_st_config(api: &ApiRepo) -> Result<PathBuf, ApiError> {
     // Try default path
-    let err = match api.get(ST_CONFIG_NAMES[0]).await {
+    let err = match api.get(ST_CONFIG_NAMES[0]) {
         Ok(st_config_path) => return Ok(st_config_path),
         Err(err) => err,
     };
 
     for name in &ST_CONFIG_NAMES[1..] {
-        if let Ok(st_config_path) = api.get(name).await {
+        if let Ok(st_config_path) = api.get(name) {
             return Ok(st_config_path);
         }
     }
@@ -75,6 +75,6 @@ pub async fn download_st_config(api: &ApiRepo) -> Result<PathBuf, ApiError> {
 #[instrument(skip_all)]
 pub async fn download_new_st_config(api: &ApiRepo) -> Result<PathBuf, ApiError> {
     tracing::info!("Downloading `config_sentence_transformers.json`");
-    let pool_config_path = api.get("config_sentence_transformers.json").await?;
+    let pool_config_path = api.get("config_sentence_transformers.json")?;
     Ok(pool_config_path)
 }
