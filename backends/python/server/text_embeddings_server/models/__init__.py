@@ -11,6 +11,7 @@ from text_embeddings_server.models.model import Model
 from text_embeddings_server.models.masked_model import MaskedLanguageModel
 from text_embeddings_server.models.default_model import DefaultModel
 from text_embeddings_server.models.classification_model import ClassificationModel
+from text_embeddings_server.models.flash_mistral import FlashMistral
 from text_embeddings_server.utils.device import get_device, use_ipex
 
 __all__ = ["Model"]
@@ -89,14 +90,26 @@ def get_model(model_path: Path, dtype: Optional[str], pool: str):
                 pool,
                 trust_remote=TRUST_REMOTE_CODE,
             )
+    elif config.model_type == "mistral" and device.type == "hpu":
+        try:
+            return FlashMistral(
+                model_path,
+                device,
+                datatype,
+                pool,
+            )
+        except FileNotFoundError as e:
+            return DefaultModel(
+                model_path,
+                device,
+                datatype,
+                pool,
+                trust_remote=TRUST_REMOTE_CODE,
+            )
     else:
         if device.type == "hpu":
             from habana_frameworks.torch.hpu import wrap_in_hpu_graph
-            from optimum.habana.transformers.modeling_utils import (
-                adapt_transformers_to_gaudi,
-            )
 
-            adapt_transformers_to_gaudi()
             if config.architectures[0].endswith("Classification"):
                 model_handle = ClassificationModel(
                     model_path,
